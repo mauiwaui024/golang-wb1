@@ -1,0 +1,7 @@
+port: "8888"
+db:
+    username: "wb_test_user"
+    host: "localhost"
+    port: "5432"
+    db: "postgres"
+    sslmode: "disable"
