@@ -12,6 +12,7 @@ import (
 
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
+	"github.com/nats-io/stan.go"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
@@ -41,8 +42,25 @@ func main() {
 	//а потом хэндлер, который зависит от сервисов
 	repos := repository.NewRepository(db)
 	services := service.NewService(repos)
-	handlers := handler.NewHandler(services)
-	// handlers := new(handler.Handler)
+
+	//подключаемся к нэтс-стриминг
+	sc, err := connectToNATSStreaming()
+	if err != nil {
+		logrus.Fatal("Failed to connect to NATS Streaming server: ", err)
+	}
+	defer sc.Close()
+
+	// Создание экземпляра хендлера
+	handlers := handler.NewHandler(services, sc)
+
+	//подписываемся на канал
+	go func() {
+		err = handlers.SubscribeToChannel("orders")
+		if err != nil {
+			logrus.Fatal("Failed to subscribe to channel: ", err)
+		}
+	}()
+
 	srv := new(golangwb1.Server)
 	go func() {
 		if err := srv.Run(viper.GetString("port"), handlers.InitRoutes()); err != nil {
@@ -68,4 +86,17 @@ func InitConfig() error {
 	viper.AddConfigPath("configs")
 	viper.SetConfigName("config")
 	return viper.ReadInConfig()
+}
+
+func connectToNATSStreaming() (stan.Conn, error) {
+	clusterID := viper.GetString("nats.cluster_id")
+	clientID := viper.GetString("nats.client_id")
+	natsURL := viper.GetString("nats.url")
+
+	sc, err := stan.Connect(clusterID, clientID, stan.NatsURL(natsURL))
+	if err != nil {
+		return nil, err
+	}
+
+	return sc, nil
 }

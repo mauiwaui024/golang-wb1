@@ -1,81 +1,72 @@
 package main
 
 import (
-	"encoding/json"
+	"fmt"
 	"log"
-	"time"
-	golangwb1 "wb-1"
+	"os"
 
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/stan.go"
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 )
 
-func main() {
+func InitConfig() error {
+	viper.AddConfigPath("configs")
+	viper.SetConfigName("config")
+	return viper.ReadInConfig()
+}
 
-	nc, err := nats.Connect("nats://localhost:4222")
+func main() {
+	logrus.SetFormatter(&logrus.JSONFormatter{})
+
+	if err := InitConfig(); err != nil {
+		logrus.Fatal("error initializing configs", err.Error())
+	}
+
+	clusterID := viper.GetString("nats.cluster_id")
+	natsURL := viper.GetString("nats.url")
+
+	nc, err := nats.Connect(natsURL)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer nc.Close()
 
-	sc, err := stan.Connect("test-cluster", "client-1", stan.NatsConn(nc))
+	sc, err := stan.Connect(clusterID, "client_2", stan.NatsConn(nc))
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer sc.Close()
 
-	order := golangwb1.Order{
-		OrderUID:    "123456",
-		TrackNumber: "ABC123",
-		DateCreated: time.Now(),
-		ShardKey:    "shard1",
-		SMID:        1,
-		OOFShard:    "oof-shard1",
-	}
+	filePath := "order.json"
 
-	deliveryInfo := golangwb1.DeliveryInfo{
-		Name:    "John Doe",
-		Phone:   "123456789",
-		Zip:     "12345",
-		City:    "New York",
-		Address: "123 Main St",
-		Region:  "NY",
-		Email:   "john@example.com",
-	}
-
-	paymentInfo := golangwb1.PaymentInfo{
-		Transaction:  "txn123",
-		RequestID:    "req123",
-		Currency:     "USD",
-		Provider:     "PayPal",
-		Amount:       100,
-		PaymentDT:    time.Now(),
-		Bank:         "Bank XYZ",
-		DeliveryCost: 10,
-		GoodsTotal:   90,
-		CustomFee:    5,
-	}
-
-	completeOrder := golangwb1.CompleteOrder{
-		Order:    order,
-		Delivery: deliveryInfo,
-		Payment:  paymentInfo,
-	}
-
-	// херачим в джсон
-	orderData, err := json.Marshal(completeOrder)
+	// Открываем файл
+	file, err := os.Open(filePath)
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer file.Close()
 
-	// и в канал публикуем
+	data, err := os.ReadFile("order.json")
+	if err != nil {
+		fmt.Println("Error reading file:", err)
+		return
+	}
+
+	// Parse JSON data into CompleteOrder struct
+
+	// Print the parsed data
+	// Similarly, access other fields as needed
+
+	// Call function to complete the order
+
+	// Отправка данных в канал
 	channel := "orders"
-	err = sc.Publish(channel, orderData)
+	err = sc.Publish(channel, data)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	log.Printf("Order data sent to channel %s", channel)
-
-	select {}
 }

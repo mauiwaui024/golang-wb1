@@ -3,5 +3,9 @@ db:
     username: "wb_test_user"
     host: "localhost"
     port: "5432"
-    db: "postgres"
+    db: "wbdb"
     sslmode: "disable"
+nats:
+    cluster_id: "test-cluster"
+    client_id: "client_1"
+    url: "nats://localhost:4222"
