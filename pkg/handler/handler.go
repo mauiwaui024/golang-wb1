@@ -42,12 +42,12 @@ func (h *Handler) SubscribeToChannel(channel string) error {
 	_, err := h.stanConn.Subscribe(channel, func(msg *stan.Msg) {
 		// Обработка полученного сообщения
 		// fmt.Printf("%s\n", msg.Data)
-		var completeOrder golangwb1.CompleteOrder
+		var completeOrder golangwb1.Order
 		err := json.Unmarshal(msg.Data, &completeOrder)
 		/////
 		// service.HandleMessage(msg.Data)
 
-		// fmt.Println(string(msg.Data))
+		fmt.Println(string(msg.Data))
 		// fmt.Println(completeOrder.Payment)
 		// fmt.Println(completeOrder)
 		// fmt.Println(completeOrder.OrderItems[0])
@@ -56,7 +56,6 @@ func (h *Handler) SubscribeToChannel(channel string) error {
 			fmt.Println("Failed to unmarshal complete order data:", err)
 			return
 		}
-
 		err = h.services.CreateOrder(completeOrder)
 		if err != nil {
 			fmt.Println("Failed to create new instance of ORDER in DB", err)

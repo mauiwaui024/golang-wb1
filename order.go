@@ -1,17 +1,20 @@
 package golangwb1
 
 type Order struct {
-	OrderUID          string `json:"order_uid"`
-	TrackNumber       string `json:"track_number"`
-	Entry             string `json:"entry"`
-	Locale            string `json:"locale"`
-	InternalSignature string `json:"internal_signature"`
-	CustomerID        string `json:"customer_id"`
-	DeliveryService   string `json:"delivery_service"`
-	ShardKey          string `json:"shardkey"`
-	SMID              int    `json:"sm_id"`
-	DateCreated       string `json:"date_created"`
-	OOFShard          string `json:"oof_shard"`
+	OrderUID          string       `json:"order_uid"`
+	TrackNumber       string       `json:"track_number"`
+	Entry             string       `json:"entry"`
+	Delivery          DeliveryInfo `json:"delivery"`
+	Payment           PaymentInfo  `json:"payment"`
+	Items             []OrderItem  `json:"items"`
+	Locale            string       `json:"locale"`
+	InternalSignature string       `json:"internal_signature"`
+	CustomerID        string       `json:"customer_id"`
+	DeliveryService   string       `json:"delivery_service"`
+	ShardKey          string       `json:"shardkey"`
+	SMID              int          `json:"sm_id"`
+	DateCreated       string       `json:"date_created"`
+	OOFShard          string       `json:"oof_shard"`
 }
 
 type DeliveryInfo struct {
@@ -24,7 +27,6 @@ type DeliveryInfo struct {
 	Email   string `json:"email"`
 }
 
-// PaymentInfo represents the payment information
 type PaymentInfo struct {
 	Transaction  string `json:"transaction"`
 	RequestID    string `json:"request_id"`
@@ -52,10 +54,9 @@ type OrderItem struct {
 	Status      int    `json:"status"`
 }
 
-// CompleteOrder represents the complete order data including Order, DeliveryInfo, PaymentInfo, and OrderItems
-type CompleteOrder struct {
-	Order      `json:""`
-	Delivery   DeliveryInfo `json:"delivery"`
-	Payment    PaymentInfo  `json:"payment"`
-	OrderItems []OrderItem  `json:"items"`
-}
+// type CompleteOrder struct {
+// 	Order      `json:""`
+// 	Delivery   DeliveryInfo `json:"delivery"`
+// 	Payment    PaymentInfo  `json:"payment"`
+// 	OrderItems []OrderItem  `json:"items"`
+// }

@@ -5,7 +5,7 @@ import (
 	golangwb1 "wb-1"
 )
 
-func (r *Repository) CreateOrder(completeOrder golangwb1.CompleteOrder) error {
+func (r *Repository) CreateOrder(completeOrder golangwb1.Order) error {
 	tx, err := r.DataBase.Begin()
 	if err != nil {
 		return err
@@ -16,17 +16,17 @@ func (r *Repository) CreateOrder(completeOrder golangwb1.CompleteOrder) error {
 	createOrdersQuery := `INSERT INTO orders (order_uid, track_number, entry, locale, internal_signature, customer_id, delivery_service, shardkey, sm_id, date_created, oof_shard)
 	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`
 	_, err = tx.Exec(createOrdersQuery,
-		completeOrder.Order.OrderUID,
-		completeOrder.Order.TrackNumber,
-		completeOrder.Order.Entry,
-		completeOrder.Order.Locale,
-		completeOrder.Order.InternalSignature,
-		completeOrder.Order.CustomerID,
-		completeOrder.Order.DeliveryService,
-		completeOrder.Order.ShardKey,
-		completeOrder.Order.SMID,
-		completeOrder.Order.DateCreated,
-		completeOrder.Order.OOFShard)
+		completeOrder.OrderUID,
+		completeOrder.TrackNumber,
+		completeOrder.Entry,
+		completeOrder.Locale,
+		completeOrder.InternalSignature,
+		completeOrder.CustomerID,
+		completeOrder.DeliveryService,
+		completeOrder.ShardKey,
+		completeOrder.SMID,
+		completeOrder.DateCreated,
+		completeOrder.OOFShard)
 	if err != nil {
 		tx.Rollback()
 		return err
@@ -36,7 +36,7 @@ func (r *Repository) CreateOrder(completeOrder golangwb1.CompleteOrder) error {
 	createDeliveryQuery := `INSERT INTO delivery (order_uid, name, phone, zip, city, address, region, email)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`
 	_, err = tx.Exec(createDeliveryQuery,
-		completeOrder.Order.OrderUID,
+		completeOrder.OrderUID,
 		completeOrder.Delivery.Name,
 		completeOrder.Delivery.Phone,
 		completeOrder.Delivery.Zip,
@@ -52,7 +52,7 @@ func (r *Repository) CreateOrder(completeOrder golangwb1.CompleteOrder) error {
 	createPaymentQuery := `INSERT INTO payment (order_uid, transaction, request_id, currency, provider, amount, payment_dt, bank, delivery_cost, goods_total, custom_fee)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`
 	_, err = tx.Exec(createPaymentQuery,
-		completeOrder.Order.OrderUID,
+		completeOrder.OrderUID,
 		completeOrder.Payment.Transaction,
 		completeOrder.Payment.RequestID,
 		completeOrder.Payment.Currency,
@@ -71,9 +71,9 @@ func (r *Repository) CreateOrder(completeOrder golangwb1.CompleteOrder) error {
 	// 4. Добавить данные в таблицу order_items
 	createOrderItemsQuery := `INSERT INTO order_items (order_uid, track_number, chrt_id, price, rid, name, sale, size, total_price, nm_id, brand, status)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`
-	for _, item := range completeOrder.OrderItems {
+	for _, item := range completeOrder.Items {
 		_, err := tx.Exec(createOrderItemsQuery,
-			completeOrder.Order.OrderUID,
+			completeOrder.OrderUID,
 			item.TrackNumber,
 			item.ChrtID,
 			item.Price,

@@ -54,14 +54,6 @@ func main() {
 		return
 	}
 
-	// Parse JSON data into CompleteOrder struct
-
-	// Print the parsed data
-	// Similarly, access other fields as needed
-
-	// Call function to complete the order
-
-	// Отправка данных в канал
 	channel := "orders"
 	err = sc.Publish(channel, data)
 	if err != nil {
