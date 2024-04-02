@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Order</title>
+    <style>
+        /* Стили для всплывающего окна */
+        #notFoundMessage {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #fff;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <h2>Search Order by OrderUID</h2>
+    <form id="searchForm" action="/order" method="POST">
+        <label for="orderUID">OrderUID:</label><br>
+        <input type="text" id="orderUID" name="id"><br>
+        <input type="submit" value="Search">
+    </form>
+
+ 
+    <div id="notFoundMessage">
+        <p>Order not found!</p>
+        <button onclick="hideNotFoundMessage()">OK</button>
+    </div>
+
+    <!-- JavaScript для отображения и скрытия сообщения о неудачном поиске -->
+    <script>
+        function showNotFoundMessage() {
+            document.getElementById("notFoundMessage").style.display = "block";
+        }
+
+        function hideNotFoundMessage() {
+            document.getElementById("notFoundMessage").style.display = "none";
+        }
+
+        // Проверяем, есть ли параметр not_found в URL
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('not_found')) {
+            showNotFoundMessage();
+        }
+    </script>
+</body>
+</html>

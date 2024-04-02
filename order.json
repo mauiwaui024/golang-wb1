@@ -1,5 +1,5 @@
 {
-    "order_uid": "b563feb7b2b84b6test1",
+    "order_uid": "b563feb7b2b84b6test420",
     "track_number": "WBILMTESTTRACK",
     "entry": "WBIL",
     "delivery": {
@@ -36,6 +36,19 @@
         "nm_id": 2389212,
         "brand": "Vivienne Sabo",
         "status": 202
+      },
+      {
+        "chrt_id": 1,
+        "track_number": "WBILMTESTTRACK2222222",
+        "price": 453333,
+        "rid": "ab42asdasd19087a764ae0btest",
+        "name": "Mascaras",
+        "sale": 50,
+        "size": "0",
+        "total_price": 630,
+        "nm_id": 12356,
+        "brand": "NIKE",
+        "status": 404
       }
     ],
     "locale": "en",

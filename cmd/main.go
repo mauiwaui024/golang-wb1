@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -50,8 +51,22 @@ func main() {
 	}
 	defer sc.Close()
 
+	//забираем всё заказы из бд
+	ordersForCache, err := services.GetAllOrdersFromDB()
+	if err != nil {
+		logrus.Fatal("Failed to get all orders from db", err)
+	}
+	//создаем кэш
+	cache := golangwb1.NewCache()
+	// Восстанавливаем данные из базы данных
+	cache.RestoreFromDatabase(ordersForCache)
+	fmt.Println("Contents of the map after cache is loaded from db:")
+	for _, value := range cache.Orders {
+		fmt.Println(value)
+	}
+
 	// Создание экземпляра хендлера
-	handlers := handler.NewHandler(services, sc)
+	handlers := handler.NewHandler(services, sc, cache)
 
 	//подписываемся на канал
 	go func() {

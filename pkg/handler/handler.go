@@ -14,21 +14,23 @@ import (
 type Handler struct {
 	services *service.Service
 	stanConn stan.Conn // внедряем зависимость
+	cache    *golangwb1.Cache
 }
 
-func NewHandler(services *service.Service, stanConn stan.Conn) *Handler {
+func NewHandler(services *service.Service, stanConn stan.Conn, cache *golangwb1.Cache) *Handler {
 	return &Handler{
 		services: services,
 		stanConn: stanConn, // Присваиваем переданное подключение к полю структуры
+		cache:    cache,
 	}
 }
 
 func (h *Handler) InitRoutes() *gin.Engine {
 	router := gin.Default()
+	router.LoadHTMLGlob("./cmd/templates/*")
+	router.GET("/", h.getForm)
 
-	router.GET("/", h.getHomePage)
-
-	router.GET("/order/:id", h.getOrderById)
+	router.POST("/order", h.getOrderById)
 
 	router.NoRoute(func(c *gin.Context) {
 		// Render the 404 page HTML template
@@ -44,13 +46,7 @@ func (h *Handler) SubscribeToChannel(channel string) error {
 		// fmt.Printf("%s\n", msg.Data)
 		var completeOrder golangwb1.Order
 		err := json.Unmarshal(msg.Data, &completeOrder)
-		/////
-		// service.HandleMessage(msg.Data)
 
-		fmt.Println(string(msg.Data))
-		// fmt.Println(completeOrder.Payment)
-		// fmt.Println(completeOrder)
-		// fmt.Println(completeOrder.OrderItems[0])
 		////////
 		if err != nil {
 			fmt.Println("Failed to unmarshal complete order data:", err)
@@ -59,7 +55,10 @@ func (h *Handler) SubscribeToChannel(channel string) error {
 		err = h.services.CreateOrder(completeOrder)
 		if err != nil {
 			fmt.Println("Failed to create new instance of ORDER in DB", err)
+			return
 		}
+		//добавляем Order в кэш
+		h.cache.AddOrder(completeOrder)
 
 	}, stan.DurableName(channel))
 	if err != nil {
@@ -67,3 +66,11 @@ func (h *Handler) SubscribeToChannel(channel string) error {
 	}
 	return nil
 }
+
+/////
+// service.HandleMessage(msg.Data)
+
+// fmt.Println(string(msg.Data))
+// fmt.Println(completeOrder.Payment)
+// fmt.Println(completeOrder)
+// fmt.Println(completeOrder.OrderItems[0])

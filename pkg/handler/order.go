@@ -1,36 +1,51 @@
 package handler
 
 import (
+	"fmt"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 )
 
-func (h *Handler) getHomePage(c *gin.Context) {
-
+func (h *Handler) getForm(c *gin.Context) {
+	c.HTML(http.StatusOK, "form.html", nil)
 }
 
 func (h *Handler) getOrderById(c *gin.Context) {
-	//		orderID := c.Param("id")
-	//		fmt.Println("pam pam pam", orderID)
-	//		orderID = trimFirstRune(orderID)
-	//		orderIDInt, err := strconv.Atoi(orderID)
-	//		if err != nil {
-	//			c.JSON(http.StatusBadRequest, gin.H{"error": "This order does not exist, sorry"})
-	//			return
-	//		}
-	//		order, err := h.services.GetOrderById(orderIDInt)
-	//		if err != nil {
-	//			c.JSON(http.StatusBadRequest, gin.H{"error": "This order does not exist in this database"})
-	//		}
-	//		c.HTML(http.StatusOK, "single_order.html", gin.H{
-	//			"order": order,
-	//		})
-	//	}
-	//
-	//	func trimFirstRune(s string) string {
-	//		for i := range s {
-	//			if i > 0 {
-	//				return s[i:]
-	//			}
-	//		}
-	//		return ""
+	orderID := c.PostForm("id")
+	fmt.Println("Orderid is", orderID)
+	order, found := h.cache.GetOrderById(orderID)
+	if !found {
+		// Перенаправляем на страницу поиска с параметром not_found в URL
+		c.Redirect(http.StatusFound, "/?not_found")
+		return
+	}
+	// for item := range order.Items {
+	// 	fmt.Println(order.Items)
+	// }
+	fmt.Println("razrzzzzzzzzzzzzz", order.Items)
+
+	c.HTML(http.StatusOK, "order.html", gin.H{
+		"OrderUID":          order.OrderUID,
+		"TrackNumber":       order.TrackNumber,
+		"Entry":             order.Entry,
+		"Delivery":          order.Delivery,
+		"Payment":           order.Payment,
+		"OrderItems":        order.Items, // Используем OrderItems здесь
+		"Locale":            order.Locale,
+		"InternalSignature": order.InternalSignature,
+		"CustomerID":        order.CustomerID,
+		"DeliveryService":   order.DeliveryService,
+		"ShardKey":          order.ShardKey,
+		"SMID":              order.SMID,
+		"DateCreated":       order.DateCreated,
+		"OOFShard":          order.OOFShard,
+	})
+
+	// c.JSON(http.StatusOK, order)
 }
+
+// fmt.Println("Contents of the map after adding new order:")
+// for _, value := range h.cache.Orders {
+// 	fmt.Println(value)
+// }
