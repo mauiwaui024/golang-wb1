@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"math/rand"
 	"time"
@@ -43,8 +42,8 @@ func main() {
 	}
 	defer sc.Close()
 
-	//генерим дохрера заказов и отправляем в канал
-	for i := 0; i < 20; i++ {
+	// генерим заказы и отправляем в канал, принтуем UID каждого заказа
+	for i := 0; i < 3000; i++ {
 		order := createFakeOrder()
 		orderJSON, err := json.Marshal(order)
 		if err != nil {
@@ -57,7 +56,25 @@ func main() {
 		}
 	}
 
+	//Отправляем в канал не валидные данные и получаем ошибку
+	// type OrderNotValid struct {
+	// 	OrderID   string
+	// 	ProductID string
+	// 	Quantity  int
+	// }
+
+	// var order OrderNotValid = OrderNotValid{OrderID: "2", ProductID: "432", Quantity: 11}
+	// NotValidOrderJson, err := json.Marshal(order)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// channel := "orders"
+	// err = sc.Publish(channel, NotValidOrderJson)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 	log.Printf("Order data sent to channel")
+
 }
 
 func createFakeOrder() golangwb1.Order {
@@ -115,6 +132,6 @@ func createFakeOrder() golangwb1.Order {
 		}
 		order.Items = append(order.Items, item)
 	}
-	fmt.Println("orderUID for getting order is ", order.OrderUID)
+	// fmt.Println("orderUID of generated order ", order.OrderUID)
 	return order
 }

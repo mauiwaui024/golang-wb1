@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -59,10 +60,10 @@ func main() {
 	cache := golangwb1.NewCache()
 	// Восстанавливаем данные из базы данных
 	cache.RestoreFromDatabase(ordersForCache)
-	// fmt.Println("Contents of the map after cache is loaded from db:")
-	// for _, value := range cache.Orders {
-	// 	fmt.Println(value)
-	// }
+	fmt.Println("Contents of the cache map after it is loaded from db:")
+	for _, value := range cache.Orders {
+		fmt.Println(value)
+	}
 	// Создание экземпляра хендлера
 	handlers := handler.NewHandler(services, sc, cache)
 
