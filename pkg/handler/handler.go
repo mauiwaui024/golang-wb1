@@ -13,14 +13,14 @@ import (
 
 type Handler struct {
 	services *service.Service
-	stanConn stan.Conn // внедряем зависимость
+	stanConn stan.Conn
 	cache    *golangwb1.Cache
 }
 
 func NewHandler(services *service.Service, stanConn stan.Conn, cache *golangwb1.Cache) *Handler {
 	return &Handler{
 		services: services,
-		stanConn: stanConn, // Присваиваем переданное подключение к полю структуры
+		stanConn: stanConn,
 		cache:    cache,
 	}
 }
@@ -33,10 +33,8 @@ func (h *Handler) InitRoutes() *gin.Engine {
 	router.POST("/order", h.getOrderById)
 
 	router.NoRoute(func(c *gin.Context) {
-		// Render the 404 page HTML template
 		c.HTML(http.StatusNotFound, "404.html", nil)
 	})
-
 	return router
 }
 
@@ -46,7 +44,6 @@ func (h *Handler) SubscribeToChannel(channel string) error {
 		// fmt.Printf("%s\n", msg.Data)
 		var completeOrder golangwb1.Order
 		err := json.Unmarshal(msg.Data, &completeOrder)
-
 		////////
 		if err != nil {
 			fmt.Println("Failed to unmarshal complete order data:", err)
@@ -67,7 +64,6 @@ func (h *Handler) SubscribeToChannel(channel string) error {
 	return nil
 }
 
-/////
 // service.HandleMessage(msg.Data)
 
 // fmt.Println(string(msg.Data))

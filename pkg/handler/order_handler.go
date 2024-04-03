@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -13,17 +12,16 @@ func (h *Handler) getForm(c *gin.Context) {
 
 func (h *Handler) getOrderById(c *gin.Context) {
 	orderID := c.PostForm("id")
-	fmt.Println("Orderid is", orderID)
+	// fmt.Println("Orderid is", orderID)
 	order, found := h.cache.GetOrderById(orderID)
 	if !found {
-		// Перенаправляем на страницу поиска с параметром not_found в URL
 		c.Redirect(http.StatusFound, "/?not_found")
 		return
 	}
 	// for item := range order.Items {
 	// 	fmt.Println(order.Items)
 	// }
-	fmt.Println("razrzzzzzzzzzzzzz", order.Items)
+	// fmt.Println("razrzzzzzzzzzzzzz", order.Items)
 
 	c.HTML(http.StatusOK, "order.html", gin.H{
 		"OrderUID":          order.OrderUID,
@@ -31,7 +29,7 @@ func (h *Handler) getOrderById(c *gin.Context) {
 		"Entry":             order.Entry,
 		"Delivery":          order.Delivery,
 		"Payment":           order.Payment,
-		"OrderItems":        order.Items, // Используем OrderItems здесь
+		"OrderItems":        order.Items,
 		"Locale":            order.Locale,
 		"InternalSignature": order.InternalSignature,
 		"CustomerID":        order.CustomerID,

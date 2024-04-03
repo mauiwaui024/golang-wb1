@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -47,24 +46,23 @@ func main() {
 	//подключаемся к нэтс-стриминг
 	sc, err := connectToNATSStreaming()
 	if err != nil {
-		logrus.Fatal("Failed to connect to NATS Streaming server: ", err)
+		logrus.Fatal("Failed to connect to NATS Streaming server: ", err.Error())
 	}
 	defer sc.Close()
 
 	//забираем всё заказы из бд
 	ordersForCache, err := services.GetAllOrdersFromDB()
 	if err != nil {
-		logrus.Fatal("Failed to get all orders from db", err)
+		logrus.Fatal("Failed to get all orders from db", err.Error())
 	}
 	//создаем кэш
 	cache := golangwb1.NewCache()
 	// Восстанавливаем данные из базы данных
 	cache.RestoreFromDatabase(ordersForCache)
-	fmt.Println("Contents of the map after cache is loaded from db:")
-	for _, value := range cache.Orders {
-		fmt.Println(value)
-	}
-
+	// fmt.Println("Contents of the map after cache is loaded from db:")
+	// for _, value := range cache.Orders {
+	// 	fmt.Println(value)
+	// }
 	// Создание экземпляра хендлера
 	handlers := handler.NewHandler(services, sc, cache)
 

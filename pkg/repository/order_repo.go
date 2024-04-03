@@ -11,8 +11,6 @@ func (r *Repository) CreateOrder(completeOrder golangwb1.Order) error {
 		return err
 	}
 
-	// 1. Добавить данные в таблицу orders
-	fmt.Println("rz")
 	createOrdersQuery := `INSERT INTO orders (order_uid, track_number, entry, locale, internal_signature, customer_id, delivery_service, shardkey, sm_id, date_created, oof_shard)
 	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`
 	_, err = tx.Exec(createOrdersQuery,
@@ -31,8 +29,7 @@ func (r *Repository) CreateOrder(completeOrder golangwb1.Order) error {
 		tx.Rollback()
 		return err
 	}
-	fmt.Println("wwww")
-	// 2. Добавить данные в таблицу delivery
+
 	createDeliveryQuery := `INSERT INTO delivery (order_uid, name, phone, zip, city, address, region, email)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`
 	_, err = tx.Exec(createDeliveryQuery,
@@ -48,7 +45,7 @@ func (r *Repository) CreateOrder(completeOrder golangwb1.Order) error {
 		tx.Rollback()
 		return err
 	}
-	// 3. Добавить данные в таблицу payment
+
 	createPaymentQuery := `INSERT INTO payment (order_uid, transaction, request_id, currency, provider, amount, payment_dt, bank, delivery_cost, goods_total, custom_fee)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`
 	_, err = tx.Exec(createPaymentQuery,
@@ -68,7 +65,6 @@ func (r *Repository) CreateOrder(completeOrder golangwb1.Order) error {
 		return err
 	}
 
-	// 4. Добавить данные в таблицу order_items
 	createOrderItemsQuery := `INSERT INTO order_items (order_uid, track_number, chrt_id, price, rid, name, sale, size, total_price, nm_id, brand, status)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`
 	for _, item := range completeOrder.Items {
@@ -93,80 +89,58 @@ func (r *Repository) CreateOrder(completeOrder golangwb1.Order) error {
 
 	return tx.Commit()
 }
-
 func (r *Repository) GetAllOrdersFromDB() ([]golangwb1.Order, error) {
 	query := `
-	SELECT
-    o.order_uid,
-    o.track_number,
-    o.entry,
-    o.locale,
-    o.internal_signature,
-    o.customer_id,
-    o.delivery_service,
-    o.shardkey,
-    o.sm_id,
-    o.date_created,
-    o.oof_shard,
-    d.name AS delivery_name,
-    d.phone AS delivery_phone,
-    d.zip AS delivery_zip,
-    d.city AS delivery_city,
-    d.address AS delivery_address,
-    d.region AS delivery_region,
-    d.email AS delivery_email,
-    p.transaction AS payment_transaction,
-    p.request_id AS payment_request_id,
-    p.currency AS payment_currency,
-    p.provider AS payment_provider,
-    p.amount AS payment_amount,
-    p.payment_dt AS payment_payment_dt,
-    p.bank AS payment_bank,
-    p.delivery_cost AS payment_delivery_cost,
-    p.goods_total AS payment_goods_total,
-    p.custom_fee AS payment_custom_fee,
-    oi.chrt_id AS item_chrt_id,
-    oi.track_number AS item_track_number,
-    oi.price AS item_price,
-    oi.rid AS item_rid,
-    oi.name AS item_name,
-    oi.sale AS item_sale,
-    oi.size AS item_size,
-    oi.total_price AS item_total_price,
-    oi.nm_id AS item_nm_id,
-    oi.brand AS item_brand,
-    oi.status AS item_status
-FROM
-    orders o
-LEFT JOIN
-    delivery d ON o.order_uid = d.order_uid
-LEFT JOIN
-    payment p ON o.order_uid = p.order_uid
-LEFT JOIN
-    order_items oi ON o.order_uid = oi.order_uid
-	`
+        SELECT
+            o.order_uid,
+            o.track_number,
+            o.entry,
+            o.locale,
+            o.internal_signature,
+            o.customer_id,
+            o.delivery_service,
+            o.shardkey,
+            o.sm_id,
+            o.date_created,
+            o.oof_shard,
+            d.name AS delivery_name,
+            d.phone AS delivery_phone,
+            d.zip AS delivery_zip,
+            d.city AS delivery_city,
+            d.address AS delivery_address,
+            d.region AS delivery_region,
+            d.email AS delivery_email,
+            p.transaction AS payment_transaction,
+            p.request_id AS payment_request_id,
+            p.currency AS payment_currency,
+            p.provider AS payment_provider,
+            p.amount AS payment_amount,
+            p.payment_dt AS payment_payment_dt,
+            p.bank AS payment_bank,
+            p.delivery_cost AS payment_delivery_cost,
+            p.goods_total AS payment_goods_total,
+            p.custom_fee AS payment_custom_fee
+        FROM
+            orders o
+        LEFT JOIN
+            delivery d ON o.order_uid = d.order_uid
+        LEFT JOIN
+            payment p ON o.order_uid = p.order_uid
+    `
 
-	// Выполнить запрос SQL
 	rows, err := r.DataBase.Query(query)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute query: %v", err)
 	}
 	defer rows.Close()
 
-	// Создать слайс для хранения заказов
 	var orders []golangwb1.Order
-	var orderItems []golangwb1.OrderItem
 
-	// Итерироваться по результатам запроса и создавать структуры Order
 	for rows.Next() {
 		var order golangwb1.Order
 		var delivery golangwb1.DeliveryInfo
 		var payment golangwb1.PaymentInfo
-		var orderItem golangwb1.OrderItem
 
-		// var orderItems []golangwb1.OrderItem
-
-		// Сканировать данные из результата запроса в переменные
 		err := rows.Scan(
 			&order.OrderUID,
 			&order.TrackNumber,
@@ -196,6 +170,63 @@ LEFT JOIN
 			&payment.DeliveryCost,
 			&payment.GoodsTotal,
 			&payment.CustomFee,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan row: %v", err)
+		}
+
+		order.Delivery = delivery
+		order.Payment = payment
+
+		orderItems, err := r.getOrderItemsByOrderUID(order.OrderUID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get order items: %v", err)
+		}
+		order.Items = orderItems
+
+		orders = append(orders, order)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error after iterating rows: %v", err)
+	}
+
+	return orders, nil
+}
+
+func (r *Repository) getOrderItemsByOrderUID(orderUID string) ([]golangwb1.OrderItem, error) {
+	query := `
+		SELECT
+			oi.chrt_id AS item_chrt_id,
+			oi.track_number AS item_track_number,
+			oi.price AS item_price,
+			oi.rid AS item_rid,
+			oi.name AS item_name,
+			oi.sale AS item_sale,
+			oi.size AS item_size,
+			oi.total_price AS item_total_price,
+			oi.nm_id AS item_nm_id,
+			oi.brand AS item_brand,
+			oi.status AS item_status
+		FROM
+			order_items oi
+		WHERE
+			oi.order_uid = $1
+	`
+
+	// Выполнить запрос SQL
+	rows, err := r.DataBase.Query(query, orderUID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute query: %v", err)
+	}
+	defer rows.Close()
+
+	var orderItems []golangwb1.OrderItem
+
+	for rows.Next() {
+		var orderItem golangwb1.OrderItem
+
+		err := rows.Scan(
 			&orderItem.ChrtID,
 			&orderItem.TrackNumber,
 			&orderItem.Price,
@@ -212,24 +243,12 @@ LEFT JOIN
 			return nil, fmt.Errorf("failed to scan row: %v", err)
 		}
 
-		order.Delivery = delivery
-		order.Payment = payment
-
-		// order.Items = append(order.Items, orderItem)
 		orderItems = append(orderItems, orderItem)
-
-		// Назначить слайс элементов заказа текущему заказу
-		order.Items = orderItems
-
-		fmt.Println(order.Items)
-		// Добавить заказ в слайс
-		orders = append(orders, order)
 	}
 
-	// Проверить наличие ошибок после итерации по результатам запроса
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("error after iterating rows: %v", err)
 	}
 
-	return orders, nil
+	return orderItems, nil
 }
